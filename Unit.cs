@@ -7,25 +7,31 @@ using System.Numerics;
 
 namespace Berserkers
 {
-    enum Races {Dracuri, Filrani, Morgoli}
+    enum Races {Dracuri, Filrani, Morgoli} //each race has a unique race ability. the Dracuri have natural armor, the Morgoli steal life when attacking, and the Filrani move faster.
     abstract class Unit
     {
         protected virtual int Damage { get; set; } = 10;
         protected virtual int HP { get; set; } = 100;
         protected virtual string Name { get; set; }
-        protected virtual Races Race { get; set; }
+        protected abstract Races Race { get; set; }
         protected virtual int Speed { get; set; } = 1;
         protected virtual Vector2 Position { get; set; } = new Vector2(0,0);
         
         public virtual void Attack(Unit otherUnit)
         {
             otherUnit.Defend(this);
+            if (Race == Races.Morgoli) HP += 2;
         }
 
         public abstract void Defend(Unit otherUnit);
 
         protected void ApplyDamage(int damage)
         {
+            if (Race == Races.Dracuri)
+            {
+                damage -= 2;
+                if (damage < 1) damage = 1;
+            }
             HP -= damage;
         }
 
@@ -39,15 +45,17 @@ namespace Berserkers
         public virtual void move(Vector2 target)
         {
             float distanceX = target.X - Position.X;
-            float distanceY = target.Y - Position.Y;    
+            float distanceY = target.Y - Position.Y;
+            float filraniMOD = 0;
+            if (Race == Races.Filrani) filraniMOD = 1;
 
-            if (Math.Abs(distanceX) > Speed)
+            if (Math.Abs(distanceX) > Speed + filraniMOD)
             {
-                distanceX = Speed*Math.Sign(distanceX);
+                distanceX = (Speed + filraniMOD) *Math.Sign(distanceX);
             }
-            if (Math.Abs(distanceY) > Speed)
+            if (Math.Abs(distanceY) > Speed + filraniMOD)
             {
-                distanceY = Speed * Math.Sign(distanceY);
+                distanceY = (Speed + filraniMOD) * Math.Sign(distanceY);
             }
 
             Position += new Vector2(distanceX, distanceY);
@@ -118,4 +126,52 @@ namespace Berserkers
             }
         }
     }
+
+    #region Dracuri 
+    // a race of scaled dragon-like people, who's worth is defined by their skill in combat.
+
+    class DracuriArcher : RangedUnit
+    {
+        protected override Races Race { get; set; } = Races.Dracuri;
+
+        public override void Defend(Unit otherUnit)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    class DracuriAssasin : MeleeUnit
+    {
+        protected override Races Race { get; set; } = Races.Dracuri;
+
+        public override void Defend(Unit otherUnit)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    class DracuriTank : MeleeUnit
+    {
+        protected override Races Race { get; set; } = Races.Dracuri;
+
+        public override void Defend(Unit otherUnit)
+        {
+            throw new NotImplementedException();
+        }
+    }
+    #endregion
+
+    #region Filrani
+    // A race of animal-like people, adept at movement they make amazing hunters.
+
+
+    #endregion
+
+
+
+    #region Morgoli 
+    // The Morgoli are a race that lives and sustains itself by devouring the life force of other beings.
+
+
+    #endregion
 }
