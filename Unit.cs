@@ -17,6 +17,11 @@ namespace Berserkers
         protected virtual int Speed { get; set; } = 1;
         protected virtual Vector2 Position { get; set; } = new Vector2(0,0);
         
+        protected Unit() 
+        {
+            Random rnd = new Random();
+            Position = new Vector2(rnd.Next(-10,10), rnd.Next(-10, 10));
+        }
         public virtual void Attack(Unit otherUnit)
         {
             otherUnit.Defend(this);
@@ -164,6 +169,35 @@ namespace Berserkers
     #region Filrani
     // A race of animal-like people, adept at movement they make amazing hunters.
 
+    class FilraniDruid : RangedUnit
+    {
+        protected override Races Race { get; set; } = Races.Filrani;
+
+        public override void Defend(Unit otherUnit)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    class FilraniHunter : MeleeUnit
+    {
+        protected override Races Race { get; set; } = Races.Filrani;
+
+        public override void Defend(Unit otherUnit)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    class FilraniWarden : MeleeUnit
+    {
+        protected override Races Race { get; set; } = Races.Filrani;
+
+        public override void Defend(Unit otherUnit)
+        {
+            throw new NotImplementedException();
+        }
+    }
 
     #endregion
 
@@ -172,6 +206,34 @@ namespace Berserkers
     #region Morgoli 
     // The Morgoli are a race that lives and sustains itself by devouring the life force of other beings.
 
+    class MorgoliMage : RangedUnit
+    {
+        protected override Races Race { get; set; } = Races.Morgoli;
 
+        public override void Defend(Unit otherUnit)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    class MorgoliSiphoner : RangedUnit
+    {
+        protected override Races Race { get; set; } = Races.Morgoli;
+
+        public override void Defend(Unit otherUnit)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    class MorgoliHusk : MeleeUnit
+    {
+        protected override Races Race { get; set; } = Races.Morgoli;
+
+        public override void Defend(Unit otherUnit)
+        {
+            throw new NotImplementedException();
+        }
+    }
     #endregion
 }
