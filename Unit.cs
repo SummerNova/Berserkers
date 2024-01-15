@@ -13,7 +13,7 @@ namespace Berserkers
         protected virtual int Damage { get; set; } = 10;
         protected virtual int HP { get; set; } = 100;
         protected virtual string Name { get; set; }
-        protected abstract Races Race { get; set; }
+        protected virtual Races Race { get; set; }
         protected virtual int Speed { get; set; } = 1;
         protected virtual Vector2 Position { get; set; } = new Vector2(0,0);
         
@@ -28,7 +28,10 @@ namespace Berserkers
             if (Race == Races.Morgoli) HP += 2;
         }
 
-        public abstract void Defend(Unit otherUnit);
+        public virtual void Defend(Unit otherUnit)
+        {
+            ApplyDamage(otherUnit.Damage);
+        }
 
         protected void ApplyDamage(int damage)
         {
@@ -135,33 +138,62 @@ namespace Berserkers
     #region Dracuri 
     // a race of scaled dragon-like people, who's worth is defined by their skill in combat.
 
-    class DracuriArcher : RangedUnit
+    class DracuriArcher : RangedUnit // Ranged warrior skilled for close quarters - gains more damage agains melee targets.
     {
-        protected override Races Race { get; set; } = Races.Dracuri;
-
-        public override void Defend(Unit otherUnit)
+        public DracuriArcher()
         {
-            throw new NotImplementedException();
+            Race = Races.Dracuri;
+        }
+
+        public override void Attack(Unit otherUnit) //works because the unit won't get closer if the target is already whithin range.
+        {
+            if (this.distance(otherUnit) <= 1) Damage += 10;
+            base.Attack(otherUnit);
+            if (this.distance(otherUnit) <= 1) Damage -= 10;
         }
     }
 
-    class DracuriAssasin : MeleeUnit
+    class DracuriAssasin : MeleeUnit // draconic assasin, attacks twice for heavy damage
     {
-        protected override Races Race { get; set; } = Races.Dracuri;
-
-        public override void Defend(Unit otherUnit)
+        public DracuriAssasin()
         {
-            throw new NotImplementedException();
+            Race = Races.Dracuri;
         }
+
+        public override void Attack(Unit otherUnit)
+        {
+            base.Attack(otherUnit);
+            int temp = Speed;
+            Speed = 0;
+            base.Attack(otherUnit);
+            Speed = temp;
+
+        }
+
     }
 
-    class DracuriTank : MeleeUnit
+    class DracuriJuggernaut : MeleeUnit // draconic warrior with spiked scales - fires back at the attacker if hit.
     {
-        protected override Races Race { get; set; } = Races.Dracuri;
+        
+        private bool Retributed = false;
+
+        public DracuriJuggernaut()
+        {
+            Race = Races.Dracuri;
+        }
 
         public override void Defend(Unit otherUnit)
         {
-            throw new NotImplementedException();
+            int temp = Damage;
+            Damage = 2;
+            if (!Retributed)
+            {
+                Retributed = true;
+                otherUnit.Defend(this);
+            }
+            Retributed = false;
+            Damage = temp;
+            base.Defend(otherUnit);
         }
     }
     #endregion
@@ -169,70 +201,139 @@ namespace Berserkers
     #region Filrani
     // A race of animal-like people, adept at movement they make amazing hunters.
 
-    class FilraniDruid : RangedUnit
+    class FilraniDruid : RangedUnit // wise ranged caster - uses speed to it's advantage, and keeps distance from the target after firing.
     {
-        protected override Races Race { get; set; } = Races.Filrani;
-
-        public override void Defend(Unit otherUnit)
+        public FilraniDruid()
         {
-            throw new NotImplementedException();
+            Race = Races.Filrani;
+        }
+
+        public override void Attack(Unit otherUnit)
+        {
+            base.Attack(otherUnit);
+            if (distance(otherUnit) < Range - 1)
+            {
+                move(Position - (otherUnit.getPosition() - Position));
+            }
+
         }
     }
 
-    class FilraniHunter : MeleeUnit
+    class FilraniHunter : MeleeUnit // a warrior with bloodlust. when kills increases speed and damage, but looses the buff when stops killing. 
     {
-        protected override Races Race { get; set; } = Races.Filrani;
+        private bool KilledRecently = false;
+        private int BaseDamage;
+        private int BaseSpeed;
 
-        public override void Defend(Unit otherUnit)
+        public FilraniHunter()
         {
-            throw new NotImplementedException();
+            Race = Races.Filrani;
+            BaseDamage = Damage;
+            BaseSpeed = Speed;
+        }
+        public override void Attack(Unit otherUnit)
+        {
+
+            if (KilledRecently)
+            {
+                Damage += 5;
+                KilledRecently = false;
+                Speed++;
+            }
+            base.Attack(otherUnit);
+
+            if (!otherUnit.isAlive())
+            {
+                KilledRecently = true;
+            }
+
+            if (!KilledRecently)
+            {
+                Damage = BaseDamage;
+                Speed = BaseSpeed;
+            }
         }
     }
 
-    class FilraniWarden : MeleeUnit
+    class FilraniWarden : MeleeUnit // really abnoxious tank. it's fast, and when it gets into melee, is erally hard to kill.
     {
-        protected override Races Race { get; set; } = Races.Filrani;
+        public FilraniWarden() 
+        {
+            Race = Races.Filrani;
+        }
 
         public override void Defend(Unit otherUnit)
         {
-            throw new NotImplementedException();
+            int Delta = HP;
+            base.Defend(otherUnit);
+            Delta -= HP;
+
+            if(distance(otherUnit) < 2) 
+            {
+                HP += (Delta * 3) / 4;
+            }
+
         }
     }
 
     #endregion
 
-
-
     #region Morgoli 
     // The Morgoli are a race that lives and sustains itself by devouring the life force of other beings.
 
-    class MorgoliMage : RangedUnit
+    class MorgoliMage : RangedUnit //Heals Drastically when he kills.
     {
-        protected override Races Race { get; set; } = Races.Morgoli;
-
-        public override void Defend(Unit otherUnit)
+        public MorgoliMage()
         {
-            throw new NotImplementedException();
+            Race = Races.Morgoli;
+        }
+        public override void Attack(Unit otherUnit)
+        {
+            base.Attack(otherUnit);
+            if (!otherUnit.isAlive())
+            {
+                HP += 30;
+            }
         }
     }
 
-    class MorgoliSiphoner : RangedUnit
+    class MorgoliSiphoner : RangedUnit //Attacks with many small attacks, but due to racial ability, heals a lot every attack. weak-ish against armored targets.
     {
-        protected override Races Race { get; set; } = Races.Morgoli;
-
-        public override void Defend(Unit otherUnit)
+        public MorgoliSiphoner()
         {
-            throw new NotImplementedException();
+            Damage = 3;
+            Race = Races.Morgoli;
+        }
+
+        public override void Attack(Unit otherUnit)
+        {
+            base.Attack(otherUnit);
+            int temp = Speed;
+            Speed = 0;
+            base.Attack(otherUnit);
+            base.Attack(otherUnit);
+            base.Attack(otherUnit);
+            base.Attack(otherUnit);
+            Speed = temp;
         }
     }
 
-    class MorgoliHusk : MeleeUnit
+    class MorgoliHusk : MeleeUnit //undead soldier, has a high chance to resist dying.
     {
-        protected override Races Race { get; set; } = Races.Morgoli;
+        Random rnd = new Random();
+        public MorgoliHusk()
+        {
+            Race = Races.Morgoli;
+        }
+        
 
         public override void Defend(Unit otherUnit)
         {
-            throw new NotImplementedException();
+            base.Defend(otherUnit);
+            if (HP <= 0)
+            {
+                if (rnd.Next(0, 100) < 75) HP = 10;
+            }
         }
     }
     #endregion
