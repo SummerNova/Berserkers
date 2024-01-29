@@ -7,15 +7,22 @@ using System.Numerics;
 
 namespace Berserkers
 {
-    enum Races {Dracuri, Filrani, Morgoli} //each race has a unique race ability. the Dracuri have natural armor, the Morgoli steal life when attacking, and the Filrani move faster.
-    abstract class Unit
+    public enum Races {Dracuri, Filrani, Morgoli} //each race has a unique race ability. the Dracuri have natural armor, the Morgoli steal life when attacking, and the Filrani move faster.
+
+    public enum Weather {Storm, Scorch, Void }
+
+    public abstract class Unit
     {
-        protected virtual int Damage { get; set; } = 10;
-        protected virtual int HP { get; set; } = 100;
-        protected virtual string Name { get; set; }
-        protected virtual Races Race { get; set; }
-        protected virtual int Speed { get; set; } = 1;
-        protected virtual Vector2 Position { get; set; } = new Vector2(0,0);
+        public virtual int CarryCapacity { get; protected set; } = 10;
+        public virtual Dice HitChance { get; protected set; } = new Dice(1,20,0);
+        public virtual Dice Damage { get; protected set; } = new Dice();
+        public virtual Dice DefenceRating { get; protected set; } = new Dice (1,20,0);
+        public virtual int HP { get; protected set; } = 100;
+        public virtual string Name { get; protected set; } = "NamelessUnit";
+        public virtual Races Race { get; protected set; }
+        public virtual int Speed { get; protected set; } = 1;
+        public virtual Vector2 Position { get; protected set; } = new Vector2(0,0);
+        public static List<Weather> WeatherList { get; set; } = new();
         
         protected Unit() 
         {
@@ -24,13 +31,35 @@ namespace Berserkers
         }
         public virtual void Attack(Unit otherUnit)
         {
-            otherUnit.Defend(this);
-            if (Race == Races.Morgoli) HP += 2;
+            int AttackRoll = HitChance.Roll();
+            int DefenseRoll = otherUnit.DefenceRating.Roll();
+            if (WeatherList.Contains(Weather.Storm)) AttackRoll -= 5;
+
+            if (AttackRoll >= DefenseRoll)
+            {
+                Console.WriteLine($"{this} hit {otherUnit} with a roll of {AttackRoll} against a roll of {DefenseRoll}");
+                otherUnit.Defend(this);
+                if (Race == Races.Morgoli) HP += 2;
+            }
+            else Console.WriteLine($"{this} missed {otherUnit} with a roll of {AttackRoll} against a roll of {DefenseRoll}");
+        }
+
+        public static void WatherEffect(Weather weather)
+        {
+            WeatherList.Add(weather);
+        }
+
+        public static void EndWeatherEffect(Weather weather)
+        {
+            if (WeatherList.Contains(weather))
+            {
+                WeatherList.Remove(weather);
+            }
         }
 
         public virtual void Defend(Unit otherUnit)
         {
-            ApplyDamage(otherUnit.Damage);
+            ApplyDamage(otherUnit.Damage.Roll());
         }
 
         protected void ApplyDamage(int damage)
@@ -40,7 +69,9 @@ namespace Berserkers
                 damage -= 2;
                 if (damage < 1) damage = 1;
             }
+            if (WeatherList.Contains(Weather.Void)) { damage *= 2; }
             HP -= damage;
+            Console.WriteLine($"{this} was hit for {damage} damage and now has {HP} HP");
         }
 
         public virtual bool isAlive()
@@ -65,49 +96,69 @@ namespace Berserkers
             {
                 distanceY = (Speed + filraniMOD) * Math.Sign(distanceY);
             }
-
+            Vector2 OldPos = Position;
             Position += new Vector2(distanceX, distanceY);
+
+            Console.WriteLine($"{Name} Moved from ({OldPos.X},{OldPos.Y}) to ({Position.X},{Position.Y})");
+
+            if (WeatherList.Contains(Weather.Scorch))
+            {
+                ApplyDamage((int)distanceX + (int)distanceY);
+            }
+
+
         }
 
         public float distance(Unit otherUnit)
         {
             return Math.Max(Math.Abs(otherUnit.Position.X - Position.X), Math.Abs(otherUnit.Position.Y - Position.Y));
         }
+
+        public override string ToString()
+        {
+            return Name;
+        }
     }
 
-    abstract class RangedUnit : Unit
+    public abstract class RangedUnit : Unit
     {
         protected virtual float Range { get; set; } = 3;
+        protected virtual float StormMod { get; set; } = 0;
 
 
         public override void Attack(Unit otherUnit)
         {
-            if (distance(otherUnit) <= Range)
+            if (WeatherList.Contains(Weather.Storm))
+            {
+                StormMod = -1;
+            }
+            if (distance(otherUnit) <= Range + StormMod)
             {
                 base.Attack(otherUnit);
             }
             else
             {
                 move(AdjustTargetForRange(otherUnit));
-                if (distance(otherUnit) <= Range)
+                if (distance(otherUnit) <= Range + StormMod)
                 {
                     base.Attack(otherUnit);
                 }
             }
+            StormMod = 0;
         }
         protected Vector2 AdjustTargetForRange(Unit otherUnit)
         {
             float TargetX = otherUnit.getPosition().X;
             float TargetY = otherUnit.getPosition().Y;
 
-            if (Math.Abs(TargetX-Position.X) > Range)
+            if (Math.Abs(TargetX-Position.X) > Range + StormMod)
             {
-                TargetX = TargetX + Range*Math.Sign(TargetX-Position.X);
+                TargetX = TargetX + (Range+StormMod)*Math.Sign(TargetX-Position.X);
             }
             else TargetX = Position.X;
-            if (Math.Abs(TargetY-Position.Y) > Range)
+            if (Math.Abs(TargetY-Position.Y) > Range + StormMod)
             {
-                TargetY = TargetY + Range * Math.Sign(TargetY - Position.Y);
+                TargetY = TargetY + (Range + StormMod) * Math.Sign(TargetY - Position.Y);
             }
             else TargetY = Position.Y;
 
@@ -116,7 +167,7 @@ namespace Berserkers
 
     }
 
-    abstract class MeleeUnit : Unit
+    public abstract class MeleeUnit : Unit
     {
         public override void Attack(Unit otherUnit)
         {
@@ -138,26 +189,40 @@ namespace Berserkers
     #region Dracuri 
     // a race of scaled dragon-like people, who's worth is defined by their skill in combat.
 
-    class DracuriArcher : RangedUnit // Ranged warrior skilled for close quarters - gains more damage agains melee targets.
+    public class DracuriArcher : RangedUnit // Ranged warrior skilled for close quarters - gains more damage agains melee targets.
     {
+        private Dice MeleeDamage = new Dice(2,8,4);
+        private Dice RangedDamage = new Dice(1,8,4);
+
+        private static int UnitCount = 0;
+
         public DracuriArcher()
         {
+            Name = "DracuriArcher" + UnitCount;
+            UnitCount++;
             Race = Races.Dracuri;
+            Damage = RangedDamage;
+            Console.WriteLine($"{Name} Has Joined The Fray");
         }
 
         public override void Attack(Unit otherUnit) //works because the unit won't get closer if the target is already whithin range.
         {
-            if (this.distance(otherUnit) <= 1) Damage += 10;
+            
+            if (this.distance(otherUnit) <= 1) Damage = MeleeDamage;
             base.Attack(otherUnit);
-            if (this.distance(otherUnit) <= 1) Damage -= 10;
+            Damage = RangedDamage;
         }
     }
 
-    class DracuriAssasin : MeleeUnit // draconic assasin, attacks twice for heavy damage
+    public class DracuriAssasin : MeleeUnit // draconic assasin, attacks twice for heavy damage
     {
+        private static int UnitCount = 0;
         public DracuriAssasin()
         {
+            Name = "DracuriAssasin" + UnitCount;
+            UnitCount++;
             Race = Races.Dracuri;
+            Console.WriteLine($"{Name} Has Joined The Fray");
         }
 
         public override void Attack(Unit otherUnit)
@@ -172,27 +237,33 @@ namespace Berserkers
 
     }
 
-    class DracuriJuggernaut : MeleeUnit // draconic warrior with spiked scales - fires back at the attacker if hit.
+    public class DracuriJuggernaut : MeleeUnit // draconic warrior with spiked scales - fires back at the attacker if hit.
     {
         
         private bool Retributed = false;
+        private Dice AttackDamage = new Dice(1,12,5);
+        private Dice RetributionDamage = new Dice(1,6,0);
+        private static int UnitCount = 0;
 
         public DracuriJuggernaut()
         {
+            Name = "DracuriJuggernaut" + UnitCount;
+            UnitCount++;
             Race = Races.Dracuri;
+            Damage = AttackDamage;
+            Console.WriteLine($"{Name} Has Joined The Fray");
         }
 
         public override void Defend(Unit otherUnit)
         {
-            int temp = Damage;
-            Damage = 2;
+            Damage = RetributionDamage;
             if (!Retributed)
             {
                 Retributed = true;
                 otherUnit.Defend(this);
             }
             Retributed = false;
-            Damage = temp;
+            Damage = AttackDamage;
             base.Defend(otherUnit);
         }
     }
@@ -201,11 +272,15 @@ namespace Berserkers
     #region Filrani
     // A race of animal-like people, adept at movement they make amazing hunters.
 
-    class FilraniDruid : RangedUnit // wise ranged caster - uses speed to it's advantage, and keeps distance from the target after firing.
+    public class FilraniDruid : RangedUnit // wise ranged caster - uses speed to it's advantage, and keeps distance from the target after firing.
     {
+        private static int UnitCount = 0;
         public FilraniDruid()
         {
+            Name = "FilraniDruid" + UnitCount;
+            UnitCount++;
             Race = Races.Filrani;
+            Console.WriteLine($"{Name} Has Joined The Fray");
         }
 
         public override void Attack(Unit otherUnit)
@@ -219,24 +294,29 @@ namespace Berserkers
         }
     }
 
-    class FilraniHunter : MeleeUnit // a warrior with bloodlust. when kills increases speed and damage, but looses the buff when stops killing. 
+    public class FilraniHunter : MeleeUnit // a warrior with bloodlust. when kills increases speed and damage, but looses the buff when stops killing. 
     {
         private bool KilledRecently = false;
-        private int BaseDamage;
+        private Dice BaseDamage = new Dice(1,6,5);
         private int BaseSpeed;
-
+        private uint DiceAmount = 1;
+        private static int UnitCount = 0;
         public FilraniHunter()
         {
+            Name = "FilraniHunter" + UnitCount;
+            UnitCount++;
             Race = Races.Filrani;
-            BaseDamage = Damage;
+            Damage = BaseDamage;
             BaseSpeed = Speed;
+            Console.WriteLine($"{Name} Has Joined The Fray");
         }
         public override void Attack(Unit otherUnit)
         {
 
             if (KilledRecently)
             {
-                Damage += 5;
+                DiceAmount++;
+                Damage = new Dice(DiceAmount,6,5);
                 KilledRecently = false;
                 Speed++;
             }
@@ -249,17 +329,22 @@ namespace Berserkers
 
             if (!KilledRecently)
             {
+                DiceAmount = 1;
                 Damage = BaseDamage;
                 Speed = BaseSpeed;
             }
         }
     }
 
-    class FilraniWarden : MeleeUnit // really abnoxious tank. it's fast, and when it gets into melee, is erally hard to kill.
+    public class FilraniWarden : MeleeUnit // really abnoxious tank. it's fast, and when it gets into melee, is erally hard to kill.
     {
+        private static int UnitCount = 0;
         public FilraniWarden() 
         {
+            Name = "FilraniWarden" + UnitCount;
+            UnitCount++;
             Race = Races.Filrani;
+            Console.WriteLine($"{Name} Has Joined The Fray");
         }
 
         public override void Defend(Unit otherUnit)
@@ -281,11 +366,15 @@ namespace Berserkers
     #region Morgoli 
     // The Morgoli are a race that lives and sustains itself by devouring the life force of other beings.
 
-    class MorgoliMage : RangedUnit //Heals Drastically when he kills.
+    public class MorgoliMage : RangedUnit //Heals Drastically when he kills.
     {
+        private static int UnitCount = 0;
         public MorgoliMage()
         {
+            Name = "MorgoliMage" + UnitCount;
+            UnitCount++;
             Race = Races.Morgoli;
+            Console.WriteLine($"{Name} Has Joined The Fray");
         }
         public override void Attack(Unit otherUnit)
         {
@@ -297,12 +386,16 @@ namespace Berserkers
         }
     }
 
-    class MorgoliSiphoner : RangedUnit //Attacks with many small attacks, but due to racial ability, heals a lot every attack. weak-ish against armored targets.
+    public class MorgoliSiphoner : RangedUnit //Attacks with many small attacks, but due to racial ability, heals a lot every attack. weak-ish against armored targets.
     {
+        private static int UnitCount = 0;
         public MorgoliSiphoner()
         {
-            Damage = 3;
+            Name = "MorgoliSiphoner" + UnitCount;
+            UnitCount++;
+            Damage = new Dice(1,4,0);
             Race = Races.Morgoli;
+            Console.WriteLine($"{Name} Has Joined The Fray");
         }
 
         public override void Attack(Unit otherUnit)
@@ -318,12 +411,16 @@ namespace Berserkers
         }
     }
 
-    class MorgoliHusk : MeleeUnit //undead soldier, has a high chance to resist dying.
+    public class MorgoliHusk : MeleeUnit //undead soldier, has a high chance to resist dying.
     {
         Random rnd = new Random();
+        private static int UnitCount = 0;
         public MorgoliHusk()
         {
+            Name = "MorgoliHusk" + UnitCount;
+            UnitCount++;
             Race = Races.Morgoli;
+            Console.WriteLine($"{Name} Has Joined The Fray");
         }
         
 
