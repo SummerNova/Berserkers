@@ -44,7 +44,7 @@ namespace Berserkers
             else Console.WriteLine($"{this} missed {otherUnit} with a roll of {AttackRoll} against a roll of {DefenseRoll}");
         }
 
-        public static void WatherEffect(Weather weather)
+        public static void WeatherEffect(Weather weather)
         {
             WeatherList.Add(weather);
         }

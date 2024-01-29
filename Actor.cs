@@ -17,15 +17,21 @@ namespace Berserkers
         public Actor(int ArmySize, Races race, int StartingResources) 
         {
             Race = race;
+            
+            Resources = StartingResources;
+            Name = $"Actor{ActorCount}";
+            ActorCount++;
+
+            Console.WriteLine($"Commander {Name} Has Entered The Battlefield, with {Resources} resources");
+
             switch (Race)
             {
                 case Races.Dracuri: GenerateDracuri(ArmySize); break;
                 case Races.Filrani: GenerateFilrani(ArmySize);break;
                 case Races.Morgoli: GenerateMorgoli(ArmySize); break;
             }
-            Resources = StartingResources;
-            Name = $"Actor {ActorCount}";
-            ActorCount++;
+
+
         }
 
         public int StealResources(int StolenAmount)
@@ -37,6 +43,11 @@ namespace Berserkers
                 Resources = 0;
             }
             return StolenAmount;
+        }
+
+        public void GainResources(int StolenAmount)
+        {
+            Resources += StolenAmount;
         }
 
         private void GenerateDracuri(int ArmySize)
