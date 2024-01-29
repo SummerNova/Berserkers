@@ -14,9 +14,9 @@ namespace Berserkers
     public abstract class Unit
     {
         public virtual int CarryCapacity { get; protected set; } = 10;
-        public virtual Dice HitChance { get; protected set; } = new Dice(1,20,0);
-        public virtual Dice Damage { get; protected set; } = new Dice();
-        public virtual Dice DefenceRating { get; protected set; } = new Dice (1,20,0);
+        public abstract Dice HitChance { get; protected set; }
+        public abstract Dice Damage { get; protected set; }
+        public abstract Dice DefenceRating { get; protected set; }
         public virtual int HP { get; protected set; } = 100;
         public virtual string Name { get; protected set; } = "NamelessUnit";
         public virtual Races Race { get; protected set; }
@@ -122,7 +122,7 @@ namespace Berserkers
 
     public abstract class RangedUnit : Unit
     {
-        protected virtual float Range { get; set; } = 3;
+        protected virtual float Range { get; set; } = 4;
         protected virtual float StormMod { get; set; } = 0;
 
 
@@ -196,13 +196,17 @@ namespace Berserkers
 
         private static int UnitCount = 0;
 
+        public override Dice HitChance { get; protected set; } = new Dice(1, 20, 7);
+        public override Dice Damage { get; protected set; } = new Dice(1, 8, 4);
+        public override Dice DefenceRating { get; protected set; } = new Dice(1, 20, 0);
+
         public DracuriArcher()
         {
             Name = "DracuriArcher" + UnitCount;
             UnitCount++;
             Race = Races.Dracuri;
             Damage = RangedDamage;
-            Console.WriteLine($"{Name} Has Joined The Fray");
+            Console.WriteLine($"{Name} Has Joined The Fray at Position ({Position.X} , {Position.Y})");
         }
 
         public override void Attack(Unit otherUnit) //works because the unit won't get closer if the target is already whithin range.
@@ -217,12 +221,16 @@ namespace Berserkers
     public class DracuriAssasin : MeleeUnit // draconic assasin, attacks twice for heavy damage
     {
         private static int UnitCount = 0;
+        public override Dice HitChance { get; protected set; } = new Dice(1, 20, 10);
+        public override Dice Damage { get; protected set; } = new Dice(3, 6, 6);
+        public override Dice DefenceRating { get; protected set; } = new Dice(1, 20, 0);
+
         public DracuriAssasin()
         {
             Name = "DracuriAssasin" + UnitCount;
             UnitCount++;
             Race = Races.Dracuri;
-            Console.WriteLine($"{Name} Has Joined The Fray");
+            Console.WriteLine($"{Name} Has Joined The Fray at Position ({Position.X},{Position.Y})");
         }
 
         public override void Attack(Unit otherUnit)
@@ -243,6 +251,11 @@ namespace Berserkers
         private bool Retributed = false;
         private Dice AttackDamage = new Dice(1,12,5);
         private Dice RetributionDamage = new Dice(1,6,0);
+
+        public override Dice HitChance { get; protected set; } = new Dice(1, 20, 4);
+        public override Dice Damage { get; protected set; } = new Dice(2, 12, 10);
+        public override Dice DefenceRating { get; protected set; } = new Dice(1, 20, 5);
+
         private static int UnitCount = 0;
 
         public DracuriJuggernaut()
@@ -251,7 +264,7 @@ namespace Berserkers
             UnitCount++;
             Race = Races.Dracuri;
             Damage = AttackDamage;
-            Console.WriteLine($"{Name} Has Joined The Fray");
+            Console.WriteLine($"{Name} Has Joined The Fray at Position ({Position.X},{Position.Y})");
         }
 
         public override void Defend(Unit otherUnit)
@@ -275,12 +288,18 @@ namespace Berserkers
     public class FilraniDruid : RangedUnit // wise ranged caster - uses speed to it's advantage, and keeps distance from the target after firing.
     {
         private static int UnitCount = 0;
+        public override Dice HitChance { get; protected set; } = new Dice(1, 20, 5);
+        public override Dice Damage { get; protected set; } = new Dice(1, 8, 3);
+        public override Dice DefenceRating { get; protected set; } = new Dice(1, 20, 3);
+
+
+
         public FilraniDruid()
         {
             Name = "FilraniDruid" + UnitCount;
             UnitCount++;
             Race = Races.Filrani;
-            Console.WriteLine($"{Name} Has Joined The Fray");
+            Console.WriteLine($"{Name} Has Joined The Fray at Position ({Position.X},{Position.Y})");
         }
 
         public override void Attack(Unit otherUnit)
@@ -297,10 +316,15 @@ namespace Berserkers
     public class FilraniHunter : MeleeUnit // a warrior with bloodlust. when kills increases speed and damage, but looses the buff when stops killing. 
     {
         private bool KilledRecently = false;
-        private Dice BaseDamage = new Dice(1,6,5);
+        private Dice BaseDamage = new Dice(1,10,5);
         private int BaseSpeed;
         private uint DiceAmount = 1;
         private static int UnitCount = 0;
+
+        public override Dice HitChance { get; protected set; } = new Dice(1, 20, 7);
+        public override Dice Damage { get; protected set; } = new Dice(1, 10, 5);
+        public override Dice DefenceRating { get; protected set; } = new Dice(1, 20, 3);
+
         public FilraniHunter()
         {
             Name = "FilraniHunter" + UnitCount;
@@ -308,7 +332,7 @@ namespace Berserkers
             Race = Races.Filrani;
             Damage = BaseDamage;
             BaseSpeed = Speed;
-            Console.WriteLine($"{Name} Has Joined The Fray");
+            Console.WriteLine($"{Name} Has Joined The Fray at Position ({Position.X},{Position.Y})");
         }
         public override void Attack(Unit otherUnit)
         {
@@ -339,12 +363,17 @@ namespace Berserkers
     public class FilraniWarden : MeleeUnit // really abnoxious tank. it's fast, and when it gets into melee, is erally hard to kill.
     {
         private static int UnitCount = 0;
+
+        public override Dice HitChance { get; protected set; } = new Dice(1, 20, 5);
+        public override Dice Damage { get; protected set; } = new Dice(2, 8, 8);
+        public override Dice DefenceRating { get; protected set; } = new Dice(1, 20, 7);
+
         public FilraniWarden() 
         {
             Name = "FilraniWarden" + UnitCount;
             UnitCount++;
             Race = Races.Filrani;
-            Console.WriteLine($"{Name} Has Joined The Fray");
+            Console.WriteLine($"{Name} Has Joined The Fray at Position ({Position.X},{Position.Y})");
         }
 
         public override void Defend(Unit otherUnit)
@@ -369,12 +398,15 @@ namespace Berserkers
     public class MorgoliMage : RangedUnit //Heals Drastically when he kills.
     {
         private static int UnitCount = 0;
+        public override Dice HitChance { get; protected set; } = new Dice(1, 20, 7);
+        public override Dice Damage { get; protected set; } = new Dice(5, 8, 3);
+        public override Dice DefenceRating { get; protected set; } = new Dice(1, 20, 0);
         public MorgoliMage()
         {
             Name = "MorgoliMage" + UnitCount;
             UnitCount++;
             Race = Races.Morgoli;
-            Console.WriteLine($"{Name} Has Joined The Fray");
+            Console.WriteLine($"{Name} Has Joined The Fray at Position ({Position.X},{Position.Y})");
         }
         public override void Attack(Unit otherUnit)
         {
@@ -389,13 +421,16 @@ namespace Berserkers
     public class MorgoliSiphoner : RangedUnit //Attacks with many small attacks, but due to racial ability, heals a lot every attack. weak-ish against armored targets.
     {
         private static int UnitCount = 0;
+
+        public override Dice HitChance { get; protected set; } = new Dice(1, 20, 5);
+        public override Dice Damage { get; protected set; } = new Dice(1,4, 0);
+        public override Dice DefenceRating { get; protected set; } = new Dice(1, 20, 3);
         public MorgoliSiphoner()
         {
             Name = "MorgoliSiphoner" + UnitCount;
             UnitCount++;
-            Damage = new Dice(1,4,0);
             Race = Races.Morgoli;
-            Console.WriteLine($"{Name} Has Joined The Fray");
+            Console.WriteLine($"{Name} Has Joined The Fray at Position ({Position.X},{Position.Y})");
         }
 
         public override void Attack(Unit otherUnit)
@@ -415,12 +450,15 @@ namespace Berserkers
     {
         Random rnd = new Random();
         private static int UnitCount = 0;
+        public override Dice HitChance { get; protected set; } = new Dice(1, 20, 3);
+        public override Dice Damage { get; protected set; } = new Dice(2, 6, 5);
+        public override Dice DefenceRating { get; protected set; } = new Dice(1, 20, 5);
         public MorgoliHusk()
         {
             Name = "MorgoliHusk" + UnitCount;
             UnitCount++;
             Race = Races.Morgoli;
-            Console.WriteLine($"{Name} Has Joined The Fray");
+            Console.WriteLine($"{Name} Has Joined The Fray at Position ({Position.X},{Position.Y})");
         }
         
 

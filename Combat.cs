@@ -8,9 +8,10 @@ namespace Berserkers
         Actor[] Actors = new Actor[2];
         Unit AttackingUnit;
         Unit DefendingUnit;
-        int currentPlayer = 0;
+    
         int winnings = 0;
         Random rnd = new Random();
+        int currentPlayer = 0;
         Dictionary<Weather, int> WeatherCooldowns = new Dictionary<Weather, int>();
 
         public Combat(Actor actor1, Actor actor2)
@@ -20,9 +21,10 @@ namespace Berserkers
             WeatherCooldowns.Add(Weather.Storm, -1);
             WeatherCooldowns.Add(Weather.Scorch, -1);
             WeatherCooldowns.Add(Weather.Void, -1);
+            currentPlayer = rnd.Next(0, 2);
         }
 
-        public void fight() 
+        public void Fight() 
         { 
             while(Actors[0].Army.Count > 0 && Actors[1].Army.Count > 0) 
             {
@@ -36,7 +38,7 @@ namespace Berserkers
             }
             else if (Actors[0].Army.Count == 0)
             {
-                Console.WriteLine($"{Actors[1].Name} has defeated his opponent");
+                Console.WriteLine($"{Actors[1].Name} has defeated his opponent with their {Actors[1].Race} army");
                 
                 foreach (Unit unit in Actors[1].Army) 
                 {
@@ -49,7 +51,7 @@ namespace Berserkers
             }
             else
             {
-                Console.WriteLine($"{Actors[0].Name} has defeated his opponent");
+                Console.WriteLine($"{Actors[0].Name} has defeated his opponent with their {Actors[0].Race} army");
 
                 foreach (Unit unit in Actors[0].Army)
                 {
@@ -72,17 +74,20 @@ namespace Berserkers
             if (!AttackingUnit.isAlive())
             {
                 Actors[currentPlayer].Army.Remove(AttackingUnit);
+                Console.WriteLine(AttackingUnit.Name + " Has Died");
             }
 
             if (!DefendingUnit.isAlive())
             {
                 Actors[1-currentPlayer].Army.Remove(DefendingUnit);
+                Console.WriteLine(DefendingUnit.Name + " Has Died");
             }
 
             ManageWeather(Weather.Storm, 0.1f, 5);
             ManageWeather(Weather.Scorch, 0.05f, 5);
             ManageWeather(Weather.Void, 0.25f, 2);
 
+            Thread.Sleep(500);
         }
 
         private void ManageWeather(Weather effect, float precenetage, int cooldown)
@@ -95,6 +100,7 @@ namespace Berserkers
             {
                 WeatherCooldowns[effect]--;
                 Unit.EndWeatherEffect(effect);
+                Console.WriteLine("The World is no longer in " + effect.ToString());
             }
             else
             {
@@ -102,6 +108,7 @@ namespace Berserkers
                 {
                     Unit.WeatherEffect(effect);
                     WeatherCooldowns[effect] = cooldown;
+                    Console.WriteLine("The World is in " + effect.ToString());
                 }
             }
         }
