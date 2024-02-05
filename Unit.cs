@@ -14,9 +14,9 @@ namespace Berserkers
     public abstract class Unit
     {
         public virtual int CarryCapacity { get; protected set; } = 10;
-        public abstract Dice HitChance { get; protected set; }
-        public abstract Dice Damage { get; protected set; }
-        public abstract Dice DefenceRating { get; protected set; }
+        public abstract IRandomProvider HitChance { get; protected set; }
+        public abstract IRandomProvider Damage { get; protected set; }
+        public abstract IRandomProvider DefenceRating { get; protected set; }
         public virtual int HP { get; protected set; } = 100;
         public virtual string Name { get; protected set; } = "NamelessUnit";
         public virtual Races Race { get; protected set; }
@@ -187,7 +187,7 @@ namespace Berserkers
     }
 
     #region Dracuri 
-    // a race of scaled dragon-like people, who's worth is defined by their skill in combat.
+    // a race of scaled dragon-like people, who's worth is defined by their skill in combat. their skill is represented by a controlled bag random in their area of expertiese.
 
     public class DracuriArcher : RangedUnit // Ranged warrior skilled for close quarters - gains more damage agains melee targets.
     {
@@ -196,9 +196,9 @@ namespace Berserkers
 
         private static int UnitCount = 0;
 
-        public override Dice HitChance { get; protected set; } = new Dice(1, 20, 7);
-        public override Dice Damage { get; protected set; } = new Dice(1, 8, 4);
-        public override Dice DefenceRating { get; protected set; } = new Dice(1, 20, 0);
+        public override IRandomProvider HitChance { get; protected set; } = new Dice(1, 20, 7);
+        public override IRandomProvider Damage { get; protected set; } = new Bag(6, 8, 10, 12, 12, 14);
+        public override IRandomProvider DefenceRating { get; protected set; } = new Dice(1, 20, 0);
 
         public DracuriArcher()
         {
@@ -221,9 +221,9 @@ namespace Berserkers
     public class DracuriAssasin : MeleeUnit // draconic assasin, attacks twice for heavy damage
     {
         private static int UnitCount = 0;
-        public override Dice HitChance { get; protected set; } = new Dice(1, 20, 10);
-        public override Dice Damage { get; protected set; } = new Dice(3, 6, 6);
-        public override Dice DefenceRating { get; protected set; } = new Dice(1, 20, 0);
+        public override IRandomProvider HitChance { get; protected set; } = new Bag(11,13, 20, 23,28,29,30,30,31);
+        public override IRandomProvider Damage { get; protected set; } = new Dice(3, 6, 6);
+        public override IRandomProvider DefenceRating { get; protected set; } = new Dice(1, 20, 0);
 
         public DracuriAssasin()
         {
@@ -252,9 +252,9 @@ namespace Berserkers
         private Dice AttackDamage = new Dice(1,12,5);
         private Dice RetributionDamage = new Dice(1,6,0);
 
-        public override Dice HitChance { get; protected set; } = new Dice(1, 20, 4);
-        public override Dice Damage { get; protected set; } = new Dice(2, 12, 10);
-        public override Dice DefenceRating { get; protected set; } = new Dice(1, 20, 5);
+        public override IRandomProvider HitChance { get; protected set; } = new Dice(1, 20, 4);
+        public override IRandomProvider Damage { get; protected set; } = new Dice(2, 12, 10);
+        public override IRandomProvider DefenceRating { get; protected set; } = new Bag( 13, 15, 17, 20, 22, 25, 27);
 
         private static int UnitCount = 0;
 
@@ -288,9 +288,9 @@ namespace Berserkers
     public class FilraniDruid : RangedUnit // wise ranged caster - uses speed to it's advantage, and keeps distance from the target after firing.
     {
         private static int UnitCount = 0;
-        public override Dice HitChance { get; protected set; } = new Dice(1, 20, 5);
-        public override Dice Damage { get; protected set; } = new Dice(1, 8, 3);
-        public override Dice DefenceRating { get; protected set; } = new Dice(1, 20, 3);
+        public override IRandomProvider HitChance { get; protected set; } = new Dice(1, 20, 5);
+        public override IRandomProvider Damage { get; protected set; } = new Dice(1, 8, 3);
+        public override IRandomProvider DefenceRating { get; protected set; } = new Dice(1, 20, 3);
 
 
 
@@ -321,9 +321,9 @@ namespace Berserkers
         private uint DiceAmount = 1;
         private static int UnitCount = 0;
 
-        public override Dice HitChance { get; protected set; } = new Dice(1, 20, 7);
-        public override Dice Damage { get; protected set; } = new Dice(1, 10, 5);
-        public override Dice DefenceRating { get; protected set; } = new Dice(1, 20, 3);
+        public override IRandomProvider HitChance { get; protected set; } = new Dice(1, 20, 7);
+        public override IRandomProvider Damage { get; protected set; } = new Dice(1, 10, 5);
+        public override IRandomProvider DefenceRating { get; protected set; } = new Dice(1, 20, 3);
 
         public FilraniHunter()
         {
@@ -364,9 +364,9 @@ namespace Berserkers
     {
         private static int UnitCount = 0;
 
-        public override Dice HitChance { get; protected set; } = new Dice(1, 20, 5);
-        public override Dice Damage { get; protected set; } = new Dice(2, 8, 8);
-        public override Dice DefenceRating { get; protected set; } = new Dice(1, 20, 7);
+        public override IRandomProvider HitChance { get; protected set; } = new Dice(1, 20, 5);
+        public override IRandomProvider Damage { get; protected set; } = new Dice(2, 8, 8);
+        public override IRandomProvider DefenceRating { get; protected set; } = new Dice(1, 20, 7);
 
         public FilraniWarden() 
         {
@@ -398,9 +398,9 @@ namespace Berserkers
     public class MorgoliMage : RangedUnit //Heals Drastically when he kills.
     {
         private static int UnitCount = 0;
-        public override Dice HitChance { get; protected set; } = new Dice(1, 20, 7);
-        public override Dice Damage { get; protected set; } = new Dice(5, 8, 3);
-        public override Dice DefenceRating { get; protected set; } = new Dice(1, 20, 0);
+        public override IRandomProvider HitChance { get; protected set; } = new Dice(1, 20, 7);
+        public override IRandomProvider Damage { get; protected set; } = new Dice(5, 8, 3);
+        public override IRandomProvider DefenceRating { get; protected set; } = new Dice(1, 20, 0);
         public MorgoliMage()
         {
             Name = "MorgoliMage" + UnitCount;
@@ -422,9 +422,9 @@ namespace Berserkers
     {
         private static int UnitCount = 0;
 
-        public override Dice HitChance { get; protected set; } = new Dice(1, 20, 5);
-        public override Dice Damage { get; protected set; } = new Dice(1,4, 0);
-        public override Dice DefenceRating { get; protected set; } = new Dice(1, 20, 3);
+        public override IRandomProvider HitChance { get; protected set; } = new Dice(1, 20, 5);
+        public override IRandomProvider Damage { get; protected set; } = new Dice(1,4, 0);
+        public override IRandomProvider DefenceRating { get; protected set; } = new Dice(1, 20, 3);
         public MorgoliSiphoner()
         {
             Name = "MorgoliSiphoner" + UnitCount;
@@ -450,9 +450,9 @@ namespace Berserkers
     {
         Random rnd = new Random();
         private static int UnitCount = 0;
-        public override Dice HitChance { get; protected set; } = new Dice(1, 20, 3);
-        public override Dice Damage { get; protected set; } = new Dice(2, 6, 5);
-        public override Dice DefenceRating { get; protected set; } = new Dice(1, 20, 5);
+        public override IRandomProvider HitChance { get; protected set; } = new Dice(1, 20, 3);
+        public override IRandomProvider Damage { get; protected set; } = new Dice(2, 6, 5);
+        public override IRandomProvider DefenceRating { get; protected set; } = new Dice(1, 20, 5);
         public MorgoliHusk()
         {
             Name = "MorgoliHusk" + UnitCount;
